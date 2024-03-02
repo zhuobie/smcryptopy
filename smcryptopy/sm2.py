@@ -1,6 +1,6 @@
 from smcryptopy._smcryptopy import lib
 from smcryptopy._smcryptopy import ffi
-from .exceptions import *
+from ._exceptions import *
 
 def gen_keypair() -> tuple[str, str]:
     keypair_ptr = lib.gen_keypair()

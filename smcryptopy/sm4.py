@@ -1,6 +1,6 @@
 from smcryptopy._smcryptopy import lib
 from smcryptopy._smcryptopy import ffi
-from .exceptions import *
+from ._exceptions import *
 
 def encrypt_ecb(input_data: bytes, key: bytes) -> bytes:
     if len(key) != 16:
