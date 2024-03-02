@@ -1,5 +1,6 @@
 from smcryptopy._smcryptopy import lib
 from smcryptopy._smcryptopy import ffi
+from .exceptions import *
 
 def gen_keypair() -> tuple[str, str]:
     keypair_ptr = lib.gen_keypair()
@@ -10,6 +11,9 @@ def gen_keypair() -> tuple[str, str]:
     return(keypair_sk, keypair_pk)
 
 def pk_from_sk(private_key: str) -> str:
+    result_pk_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if result_pk_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     result_ptr = lib.pk_from_sk(ffi.new('char[]', private_key.encode('utf-8')))
     result_str = ffi.string(result_ptr).decode('utf-8')
     lib.free_char_array(result_ptr)
@@ -40,6 +44,9 @@ def keypair_from_pem_file(pem_file: str) -> tuple[str, str]:
     return(keypair_sk, keypair_pk)
 
 def keypair_to_pem_file(private_key: str, pem_file: str) -> None:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
     pem_file_ptr = ffi.new('char[]', pem_file.encode('utf-8'))
     lib.keypair_to_pem_file(private_key_ptr, pem_file_ptr)
@@ -51,11 +58,17 @@ def pubkey_from_pem_file(pem_file: str) -> str:
     return(pubkey_str)
 
 def pubkey_to_pem_file(public_key: str, pem_file: str) -> None:
+    public_key_valid = lib.pubkey_valid(ffi.new('char[]', public_key.encode('utf-8')))
+    if public_key_valid == 0:
+        raise InvalidPublicKey('Invalid public key')
     public_key_ptr = ffi.new('char[]', public_key.encode('utf-8'))
     pem_file_ptr = ffi.new('char[]', pem_file.encode('utf-8'))
     lib.pubkey_to_pem_file(public_key_ptr, pem_file_ptr)
 
 def sign(id: bytes, data: bytes, private_key: str) -> bytes:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     id_ptr = ffi.new('unsigned char[]', id)
     data_ptr = ffi.new('unsigned char[]', data)
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
@@ -67,6 +80,9 @@ def sign(id: bytes, data: bytes, private_key: str) -> bytes:
     return(result_bytes)
 
 def verify(id: bytes, data: bytes, sign: bytes, public_key: str) -> int:
+    public_key_valid = lib.pubkey_valid(public_key.encode('utf-8'))
+    if public_key_valid == 0:
+        raise InvalidPublicKey('Invalid public key')
     id_ptr = ffi.new('unsigned char[]', id)
     data_ptr = ffi.new('unsigned char[]', data)
     sign_ptr = ffi.new('unsigned char[]', sign)
@@ -75,6 +91,9 @@ def verify(id: bytes, data: bytes, sign: bytes, public_key: str) -> int:
     return(result_ptr)
 
 def sign_to_file(id: bytes, data: bytes, sign_file: str, private_key: str) -> None:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     id_ptr = ffi.new('unsigned char[]', id)
     data_ptr = ffi.new('unsigned char[]', data)
     sign_file_ptr = ffi.new('char[]', sign_file.encode('utf-8'))
@@ -82,6 +101,9 @@ def sign_to_file(id: bytes, data: bytes, sign_file: str, private_key: str) -> No
     lib.sign_to_file(id_ptr, len(id), data_ptr, len(data), sign_file_ptr, private_key_ptr)
 
 def verify_from_file(id: bytes, data: bytes, sign_file: str, public_key: str) -> int:
+    public_key_valid = lib.pubkey_valid(public_key.encode('utf-8'))
+    if public_key_valid == 0:
+        raise InvalidPublicKey('Invalid public key')
     id_ptr = ffi.new('unsigned char[]', id)
     data_ptr = ffi.new('unsigned char[]', data)
     sign_file_ptr = ffi.new('char[]', sign_file.encode('utf-8'))
@@ -90,6 +112,9 @@ def verify_from_file(id: bytes, data: bytes, sign_file: str, public_key: str) ->
     return(result_ptr)
 
 def encrypt(data: bytes, public_key: str) -> bytes:
+    public_key_valid = lib.pubkey_valid(public_key.encode('utf-8'))
+    if public_key_valid == 0:
+        raise InvalidPublicKey('Invalid public key')
     data_ptr = ffi.new('unsigned char[]', data)
     public_key_ptr = ffi.new('char[]', public_key.encode('utf-8'))
     enc_len_ptr = ffi.new('size_t*')
@@ -100,6 +125,9 @@ def encrypt(data: bytes, public_key: str) -> bytes:
     return(result_bytes)
 
 def decrypt(data: bytes, private_key: str) -> bytes:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     data_ptr = ffi.new('unsigned char[]', data)
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
     dec_len_ptr = ffi.new('size_t*')
@@ -110,6 +138,9 @@ def decrypt(data: bytes, private_key: str) -> bytes:
     return(result_bytes)
 
 def encrypt_c1c2c3(data: bytes, public_key: str) -> bytes:
+    public_key_valid = lib.pubkey_valid(public_key.encode('utf-8'))
+    if public_key_valid == 0:
+        raise InvalidPublicKey('Invalid public key')
     data_ptr = ffi.new('unsigned char[]', data)
     public_key_ptr = ffi.new('char[]', public_key.encode('utf-8'))
     enc_len_ptr = ffi.new('size_t*')
@@ -120,6 +151,9 @@ def encrypt_c1c2c3(data: bytes, public_key: str) -> bytes:
     return(result_bytes)
 
 def decrypt_c1c2c3(data: bytes, private_key: str) -> bytes:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     data_ptr = ffi.new('unsigned char[]', data)
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
     dec_len_ptr = ffi.new('size_t*')
@@ -130,6 +164,9 @@ def decrypt_c1c2c3(data: bytes, private_key: str) -> bytes:
     return(result_bytes)
 
 def encrypt_asna1(data: bytes, public_key: str) -> bytes:
+    public_key_valid = lib.pubkey_valid(public_key.encode('utf-8'))
+    if public_key_valid == 0:
+        raise InvalidPublicKey('Invalid public key')
     data_ptr = ffi.new('unsigned char[]', data)
     public_key_ptr = ffi.new('char[]', public_key.encode('utf-8'))
     enc_len_ptr = ffi.new('size_t*')
@@ -140,6 +177,9 @@ def encrypt_asna1(data: bytes, public_key: str) -> bytes:
     return(result_bytes)
 
 def decrypt_asna1(data: bytes, private_key: str) -> bytes:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     data_ptr = ffi.new('unsigned char[]', data)
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
     dec_len_ptr = ffi.new('size_t*')
@@ -150,6 +190,9 @@ def decrypt_asna1(data: bytes, private_key: str) -> bytes:
     return(result_bytes)
 
 def encrypt_hex(data: bytes, public_key: str) -> str:
+    public_key_valid = lib.pubkey_valid(public_key.encode('utf-8'))
+    if public_key_valid == 0:
+        raise InvalidPublicKey('Invalid public key')
     data_ptr = ffi.new('unsigned char[]', data)
     public_key_ptr = ffi.new('char[]', public_key.encode('utf-8'))
     result_ptr = lib.encrypt_hex(data_ptr, len(data), public_key_ptr)
@@ -158,6 +201,9 @@ def encrypt_hex(data: bytes, public_key: str) -> str:
     return(result_str)
 
 def decrypt_hex(data: str, private_key: str) -> bytes:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     data_ptr = ffi.new('char[]', data.encode('utf-8'))
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
     dec_len_ptr = ffi.new('size_t*')
@@ -168,6 +214,9 @@ def decrypt_hex(data: str, private_key: str) -> bytes:
     return(result_bytes)
 
 def encrypt_base64(data: bytes, public_key: str) -> str:
+    public_key_valid = lib.pubkey_valid(public_key.encode('utf-8'))
+    if public_key_valid == 0:
+        raise InvalidPublicKey('Invalid public key')
     data_ptr = ffi.new('unsigned char[]', data)
     public_key_ptr = ffi.new('char[]', public_key.encode('utf-8'))
     result_ptr = lib.encrypt_base64(data_ptr, len(data), public_key_ptr)
@@ -176,6 +225,9 @@ def encrypt_base64(data: bytes, public_key: str) -> str:
     return(result_str)
 
 def decrypt_base64(data: str, private_key: str) -> bytes:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     data_ptr = ffi.new('char[]', data.encode('utf-8'))
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
     dec_len_ptr = ffi.new('size_t*')
@@ -186,12 +238,18 @@ def decrypt_base64(data: str, private_key: str) -> bytes:
     return(result_bytes)
 
 def encrypt_to_file(data: bytes, enc_file: str, public_key: str) -> None:
+    public_key_valid = lib.pubkey_valid(public_key.encode('utf-8'))
+    if public_key_valid == 0:
+        raise InvalidPublicKey('Invalid public key')
     data_ptr = ffi.new('unsigned char[]', data)
     enc_file_ptr = ffi.new('char[]', enc_file.encode('utf-8'))
     public_key_ptr = ffi.new('char[]', public_key.encode('utf-8'))
     lib.encrypt_to_file(data_ptr, len(data), enc_file_ptr, public_key_ptr)
 
 def decrypt_from_file(dec_file: str, private_key: str) -> bytes:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     dec_file_ptr = ffi.new('char[]', dec_file.encode('utf-8'))
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
     dec_len_ptr = ffi.new('size_t*')
@@ -202,6 +260,9 @@ def decrypt_from_file(dec_file: str, private_key: str) -> bytes:
     return(result_bytes)
 
 def keyexchange_1ab(klen: int, id: bytes, private_key: str) -> tuple[bytes, str]:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     id_ptr = ffi.new('unsigned char[]', id)
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
     data_len_ptr = ffi.new('size_t*')
@@ -216,6 +277,12 @@ def keyexchange_1ab(klen: int, id: bytes, private_key: str) -> tuple[bytes, str]
     return(data_bytes, private_key_r_str)
 
 def keyexchange_2a(id: bytes, private_key: str, private_key_r: str, recive_bytes: bytes) -> tuple[str, bytes]:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
+    private_key_r_valid = lib.privkey_valid(ffi.new('char[]', private_key_r.encode('utf-8')))
+    if private_key_r_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     id_ptr = ffi.new('unsigned char[]', id)
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
     private_key_r_ptr = ffi.new('char[]', private_key_r.encode('utf-8'))
@@ -232,6 +299,12 @@ def keyexchange_2a(id: bytes, private_key: str, private_key_r: str, recive_bytes
     return(k_str, s12_bytes)
 
 def keyexchange_2b(id: bytes, private_key: str, private_key_r: str, recive_bytes: bytes) -> tuple[str, bytes]:
+    private_key_valid = lib.privkey_valid(ffi.new('char[]', private_key.encode('utf-8')))
+    if private_key_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
+    private_key_r_valid = lib.privkey_valid(ffi.new('char[]', private_key_r.encode('utf-8')))
+    if private_key_r_valid == 0:
+        raise InvalidPrivateKey('Invalid private key')
     id_ptr = ffi.new('unsigned char[]', id)
     private_key_ptr = ffi.new('char[]', private_key.encode('utf-8'))
     private_key_r_ptr = ffi.new('char[]', private_key_r.encode('utf-8'))
