@@ -1,4 +1,4 @@
-本项目是`smcrypto`的Python3实现，改库实现了国密`SM3`、`SM2`、`SM4`算法。
+本项目是`smcrypto`的Python3实现，该库实现了国密`SM3`、`SM2`、`SM4`算法。
 
 ## 安装
 
